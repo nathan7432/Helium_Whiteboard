@@ -33,6 +33,8 @@ res_vars = {
     10: [2, 1, 1],
 }
 
+unasserted = 0 # incremented for every unasserted hspot
+
 for hspot in h.hspot_by_addr:
     # try loop to skip all unasserted hspots
     for res in range(4, 11):
@@ -41,6 +43,7 @@ for hspot in h.hspot_by_addr:
                                       res)  # lat, lng, hex resolution
             h.hspot_by_addr[hspot][f"res{res}_addr"] = h3_address
         except KeyError:
+            unasserted += 1
             continue
 
         try:
@@ -54,13 +57,13 @@ for res in hex_dict:
     # add neighbors to hex_dict
     for hex in hex_dict[res]:
         hex_dict[res][hex]["neighbors"] = dict.fromkeys(h3.k_ring_distances(hex, 1)[1], "no")
-        try:
             # neighbor at density_tgt? yes/no
-            for neighbor in hex_dict[res][hex]["neighbors"]:
+        for neighbor in hex_dict[res][hex]["neighbors"]:
+            try:
                 if hex_dict[res][neighbor]['n'] >= res_vars[res][1]:
                     hex_dict[res][hex]["neighbors"][neighbor] = "yes"
-        except KeyError:
-            continue
+            except KeyError:
+                continue
 
 del hex, neighbor, res
 
@@ -85,14 +88,14 @@ for res in hex_dict:
     for hex in hex_dict[res]:
         hex_dict[res][hex]["scaling"] = min(hex_dict[res][hex]["dens_lmt"]/hex_dict[res][hex]["n"], 1)
 
-
+# Testing purposes only
 # TSA hex_8 = "882aac8883fffff"
 multiplier = hex_dict[8]["882aac8883fffff"]["good_neighbors"] + 1 - res_vars[8][0] + 1
 gn = hex_dict[8]["882aac8883fffff"]["good_neighbors"]
 print(hex_dict[8]["882aac8883fffff"])
-print(f"Good neighbors {gn}")
-print(f"max {res_vars[8][2]}")
-print(f"tgt {res_vars[8][1]}")
-print(f"multiplier {multiplier}")
+print(f"Good neighbors: {gn}")
+print(f"max: {res_vars[8][2]}")
+print(f"tgt: {res_vars[8][1]}")
+print(f"multiplier: {multiplier}")
 print(hex_dict[8]["882aac8883fffff"]["dens_lmt"])
 print(hex_dict[8]["882aac8883fffff"]["scaling"])
