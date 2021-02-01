@@ -7,16 +7,14 @@
 # calculate tgt_density per hex
 # add neighbors to hex_dict - done
 # good_neighbors = neighbors at or above density_tgt - done
-# calc hex_density_limit and add to each hex in hex dict
-# -> sum good_neighbors
-# -> hex_dict[res][hex]["good_neighbors"] =
-# max(good_neighbors + 1 - res_vars[res][1] + 1, 1)
-
+# calc hex_density_limit and add to each hex in hex dict - done
+# calc scaling factor per hotspot and add to hspot_by_addr
 
 # Goal2: sandbox mode, add hotspots on the fly
 
 from Hotspots import Hotspots
 import h3
+import numpy
 
 h = Hotspots()
 
@@ -37,20 +35,21 @@ unasserted = 0 # incremented for every unasserted hspot
 
 for hspot in h.hspot_by_addr:
     # try loop to skip all unasserted hspots
-    for res in range(4, 11):
-        try:
-            h3_address = h3.geo_to_h3(h.hspot_by_addr[hspot]["lat"], h.hspot_by_addr[hspot]["lng"],
-                                      res)  # lat, lng, hex resolution
-            h.hspot_by_addr[hspot][f"res{res}_addr"] = h3_address
-        except KeyError:
-            unasserted += 1
-            continue
-
-        try:
-            hex_dict[res][h3_address]['n'] += 1
-        except KeyError:
-            hex_dict[res][h3_address] = {'n': 1}
-
+    try:
+        for res in range(4, 11):
+            h3_address = h3.geo_to_h3(h.hspot_by_addr[hspot]["lat"], h.hspot_by_addr[hspot]["lng"], res)  # lat, lng, hex resolution
+            if res == 4:
+                h.hspot_by_addr[hspot]["hex_addr"] = []
+                h.hspot_by_addr[hspot]["hex_addr"].append(h3_address)
+            else:
+                h.hspot_by_addr[hspot]["hex_addr"].append(h3_address)
+            try:
+                hex_dict[res][h3_address]['n'] += 1
+            except KeyError:
+                hex_dict[res][h3_address] = {'n': 1}
+    except KeyError:
+        unasserted += 1
+        continue
 del h3_address, hspot, res
 
 for res in hex_dict:
@@ -64,7 +63,6 @@ for res in hex_dict:
                     hex_dict[res][hex]["neighbors"][neighbor] = "yes"
             except KeyError:
                 continue
-
 del hex, neighbor, res
 
 # sum good neighbors
@@ -80,6 +78,8 @@ del hex, neighbor, res, temp_gd_neigh
 # calculate density limit
 for res in hex_dict:
     for hex in hex_dict[res]:
+        if hex == "882aac8883fffff":
+            print("pause here")
         hex_dict[res][hex]["dens_lmt"] = min(res_vars[res][2], res_vars[res][1] * max(hex_dict[res][hex]["good_neighbors"] + 1 - res_vars[res][0] + 1, 1))
 del hex, res
 
@@ -87,11 +87,33 @@ del hex, res
 for res in hex_dict:
     for hex in hex_dict[res]:
         hex_dict[res][hex]["scaling"] = min(hex_dict[res][hex]["dens_lmt"]/hex_dict[res][hex]["n"], 1)
+del hex, res
+
+# calculate scaling factor per hotspot
+for hspot in h.hspot_by_addr:
+    try:
+        res = 4
+        for hex_adr in h.hspot_by_addr[hspot]["hex_addr"]:
+            if res == 4:
+                temp_scaling_list = []
+                temp_scaling_list.append(hex_dict[res][hex_adr]["scaling"])
+            else:
+                temp_scaling_list.append(hex_dict[res][hex_adr]["scaling"])
+            res += 1
+    except KeyError:
+        continue
+    h.hspot_by_addr[hspot]["tx_rwd_scaling"] = numpy.prod(temp_scaling_list)
+
+
+
+
 
 # Testing purposes only
 # TSA hex_8 = "882aac8883fffff"
+# TSA addr = "11dZ9ow9HZQj3GJEBdFXxkzVHbBfxKyJJ9P11LvkFvqgm1TYzke"
 multiplier = hex_dict[8]["882aac8883fffff"]["good_neighbors"] + 1 - res_vars[8][0] + 1
 gn = hex_dict[8]["882aac8883fffff"]["good_neighbors"]
+scaling = h.hspot_by_addr["11VGQgdX25PLzPd6qNJ5ZQMZUV7HYGNAqz6QgSUKtMYqEbkcnDR"]["tx_rwd_scaling"] # for TMC
 print(hex_dict[8]["882aac8883fffff"])
 print(f"Good neighbors: {gn}")
 print(f"max: {res_vars[8][2]}")
@@ -99,3 +121,6 @@ print(f"tgt: {res_vars[8][1]}")
 print(f"multiplier: {multiplier}")
 print(hex_dict[8]["882aac8883fffff"]["dens_lmt"])
 print(hex_dict[8]["882aac8883fffff"]["scaling"])
+print(f"Transmit Reward Scaling: {scaling}")
+print(f"Unasserted: {unasserted}")
+del gn, multiplier, unasserted, scaling
