@@ -1,3 +1,6 @@
+# shade hexes based on ratio of n to lmt density
+
+
 from Hotspots import Hotspots
 import h3
 import folium

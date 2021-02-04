@@ -1,5 +1,6 @@
 from load_hotspots import load_hotspots
-
+import json
+import urllib
 
 class Hotspots:
     def __init__(self, force=False):
@@ -14,6 +15,12 @@ class Hotspots:
         for h in self.hotspots:
             self.hspot_by_addr[h['address']] = h
             self.hspot_by_name[h['name'].lower()] = h
+
+        temp_height = json.load(urllib.request.urlopen("https://api.helium.io/v1/blocks/height"))
+        self.height = temp_height["data"]["height"]
+
+        temp_interactive_var = json.load(urllib.request.urlopen("https://api.helium.io/v1/vars/hip17_interactivity_blocks"))
+        self.interacitve_var = temp_interactive_var["data"]
 
     def get_hotspot_by_addr(self, address):
         return self.hspot_by_addr.get(address)
