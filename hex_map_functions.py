@@ -1,5 +1,8 @@
 import h3
 import folium
+from folium.features import DivIcon
+from folium.plugins import FastMarkerCluster
+import random
 
 # directly from example notebook
 def visualize_hexagons(hexagons, color="red", folium_map=None):
@@ -29,9 +32,64 @@ def visualize_hexagons(hexagons, color="red", folium_map=None):
     return m
 
 # pass in user input and creates 1 resolutions of hexes
-def hex_map_res_x(resol, k_rings, center_point, color, m):  # pass in resolution, k_rings out, center_point, color
-    h3_address = h3.geo_to_h3(center_point[0], center_point[1], resol)  # lat, lng, hex resolution
+# OG
+# def hex_map_res_x(resol, k_rings, center_point, color, m):  # pass in resolution, k_rings out, center_point, color
+#     h3_address = h3.geo_to_h3(center_point[0], center_point[1], resol)  # lat, lng, hex resolution
+#     for ring in range(k_rings, 1, -1):
+#         m = visualize_hexagons(list(h3.k_ring_distances(h3_address, k_rings)[ring-1]), color=color, folium_map=m)
+#     m.save("index.html")
+
+def hex_map_res_x(resol, center_point, m):
+    """
+
+    :param resol: resolution of hexagons to add to map
+    :param center_point: converted to h3 address and determines center hexagon of resolution
+    :param m: map object to add hexagons to
+    :return: list of h3 address of hexagons visualized
+    """
+    k_rings_dict = {4: 2, 5: 4, 6: 8, 7: 10, 8: 6, 9: 24,
+                    10: 34}  # change this for more or less rings
+    k_rings = k_rings_dict[resol]
+    color_dict = {10: "yellow", 9: "orange", 8: "red", 7: "blue", 6: "purple", 5: "green", 4: "black"}
+
+    h3_address = h3.geo_to_h3(center_point[0], center_point[1], resol)  # center hex address
+    list_h3_visualized = []
     for ring in range(k_rings, 1, -1):
-        m = visualize_hexagons(list(h3.k_ring_distances(h3_address, k_rings)[ring-1]), color=color, folium_map=m)
-        print("ring" + str(ring) + ":" + str(ring-1))
-    m.save("index.html")
+        temp_viz = h3.k_ring_distances(h3_address, k_rings)[ring-1]
+        list_h3_visualized.extend(temp_viz)
+        m = visualize_hexagons(temp_viz, color=color_dict[resol], folium_map=m)
+    return [list_h3_visualized, m]
+
+# puts 'text' on map 'm' at 'coords'
+def text_on_map(m,text,coords):
+    folium.map.Marker(
+        coords,
+        icon=DivIcon(
+            icon_size=(250,36),
+            icon_anchor=(10,20),
+            html='<div style="font-family:Courier New; font-size: 20pt">'
+                    f'<b>{text}</b>'
+                 '</div>'
+            )
+        ).add_to(m)
+    return m
+
+# text_on_map tester
+# m = folium.Map([40.085272742870025, -75.70014890016598])
+#
+# start = [40.085272742870025, -75.70014890016598]
+# list = [[40.085272742870025, -75.70014890016598]]
+# for i in range(0, 200):
+#     rand = random.randint(-1000,1000)
+#     rand = rand / (1000)
+#     rand2 = random.randint(-1000, 1000)
+#     rand2 = rand2 / (1000)
+#     temp = [start[0] + rand, start[1] + rand2]
+#     list.append(temp)
+# print(list)
+#
+# i = 0
+# for item in list:
+#     i += 1
+#     print(i)
+#     text_on_map(m,"test",item).save("index.html")
