@@ -33,17 +33,17 @@ def visualize_hexagons(hexagons, color="red", folium_map=None):
 
 # pass in user input and creates 1 resolutions of hexes
 # OG
-# def hex_map_res_x(resol, k_rings, center_point, color, m):  # pass in resolution, k_rings out, center_point, color
-#     h3_address = h3.geo_to_h3(center_point[0], center_point[1], resol)  # lat, lng, hex resolution
+# def hex_map_res_x(resol, k_rings, map_center, color, m):  # pass in resolution, k_rings out, map_center, color
+#     h3_address = h3.geo_to_h3(map_center[0], map_center[1], resol)  # lat, lng, hex resolution
 #     for ring in range(k_rings, 1, -1):
 #         m = visualize_hexagons(list(h3.k_ring_distances(h3_address, k_rings)[ring-1]), color=color, folium_map=m)
 #     m.save("index.html")
 
-def hex_map_res_x(resol, center_point, m):
+def hex_map_res_x(resol, map_center, m, list_h3_visualized = []):
     """
 
     :param resol: resolution of hexagons to add to map
-    :param center_point: converted to h3 address and determines center hexagon of resolution
+    :param map_center: converted to h3 address and determines center hexagon of resolution
     :param m: map object to add hexagons to
     :return: list of h3 address of hexagons visualized
     """
@@ -52,16 +52,37 @@ def hex_map_res_x(resol, center_point, m):
     k_rings = k_rings_dict[resol]
     color_dict = {10: "yellow", 9: "orange", 8: "red", 7: "blue", 6: "purple", 5: "green", 4: "black"}
 
-    h3_address = h3.geo_to_h3(center_point[0], center_point[1], resol)  # center hex address
-    list_h3_visualized = []
+    h3_address = h3.geo_to_h3(map_center[0], map_center[1], resol)  # center hex address
+    list_h3_visualized.append(h3_address)
     for ring in range(k_rings, 1, -1):
         temp_viz = h3.k_ring_distances(h3_address, k_rings)[ring-1]
         list_h3_visualized.extend(temp_viz)
         m = visualize_hexagons(temp_viz, color=color_dict[resol], folium_map=m)
     return [list_h3_visualized, m]
 
+def hex_map_res_all(m, userHexRange, map_center):
+
+    if userHexRange[0] == userHexRange[1]:
+        output = hex_map_res_x(userHexRange[0], map_center, m)
+        m = output[1]
+        list_h3_visualized = output[0]
+    else:
+        for res in range(userHexRange[0], userHexRange[1] - 1, -1):
+            output = hex_map_res_x(res, map_center, m)
+            print(f"Res {res} hexes added")
+            m = output[1]
+            list_h3_visualized = output[0]
+    return [list_h3_visualized, m]
+
 # puts 'text' on map 'm' at 'coords'
 def text_on_map(m,text,coords):
+    """
+
+    :param m: map object to add 'text' to
+    :param text: added to map
+    :param coords: location on map
+    :return: map object with added text
+    """
     folium.map.Marker(
         coords,
         icon=DivIcon(

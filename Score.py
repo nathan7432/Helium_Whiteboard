@@ -133,6 +133,8 @@ def score():
 
     # testing clipping calc for res 10
     for hex in temp_hex_dict[10]:
+        if hex == "892aac88817ffff":
+            print("pause")
         hex_dict[hex]["unclipped"] = min(hex_dict[hex]["dens_lmt"] / hex_dict[hex]["n"], 1)
         hex_dict[hex]["clipped"] = min(hex_dict[hex]["dens_lmt"], hex_dict[hex]['n'])
 
@@ -140,8 +142,8 @@ def score():
     # min(den limit/ sum clipped children, 1) = unclipped scaling
     for res in range(9, 3, -1):
         for hex in temp_hex_dict[res]:
-            # if hex == "882aac8883fffff": #debug
-            #     print("pause") #debug
+            if hex == "892aac88817ffff": #debug
+                print("pause") #debug
             temp_sum = 0
             for child in hex_dict[hex]["children"]:
                 try:
