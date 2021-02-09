@@ -81,14 +81,14 @@ output = hex_map_res_all(m,userHexRange,map_center)
 output[1].save("index.html")
 list_h3_visualized = output[0]
 
-# FIXME list_h3_visualized is correct
-#   works for res 10 but not others
 for hex in list_h3_visualized:
     try:
-        text = str(hex_dict[hex]["clipped"])+"/"+str(hex_dict[hex]["unclipped"])
+        text = hex_dict[hex]["clipped"]/hex_dict[hex]["unclipped"]
+        if text != 1:
+            text = str(hex_dict[hex]["clipped"])+"/"+str(hex_dict[hex]["unclipped"])
+            m = text_on_map(m, text, h3.h3_to_geo(hex))
     except KeyError:
         continue
-    m = text_on_map(m,text,h3.h3_to_geo(hex))
 m.save("index.html")
 # add test to each hex
 # hexcoords = []

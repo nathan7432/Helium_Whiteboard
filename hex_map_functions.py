@@ -61,7 +61,13 @@ def hex_map_res_x(resol, map_center, m, list_h3_visualized = []):
     return [list_h3_visualized, m]
 
 def hex_map_res_all(m, userHexRange, map_center):
+    """
 
+    :param m: map object to add hexes
+    :param userHexRange: resolutions of hexes to display
+    :param map_center: center hex to viz k-rings around
+    :return: list visualized hexes and map object with hexes added
+    """
     if userHexRange[0] == userHexRange[1]:
         output = hex_map_res_x(userHexRange[0], map_center, m)
         m = output[1]
@@ -88,7 +94,7 @@ def text_on_map(m,text,coords):
         icon=DivIcon(
             icon_size=(250,36),
             icon_anchor=(10,20),
-            html='<div style="font-family:Courier New; font-size: 20pt">'
+            html='<div style="font-family:Courier New; font-size: 10pt">'
                     f'<b>{text}</b>'
                  '</div>'
             )

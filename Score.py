@@ -15,8 +15,10 @@
 from Hotspots import Hotspots
 import h3
 import numpy
+from temp import testList
 
 def score():
+
     h = Hotspots()
 
     hex_dict = {}
@@ -49,7 +51,6 @@ def score():
 
 
     # add interactive field to hotspot
-    # working 2/3/2021
     for hspot in h.hspot_by_addr:
         # if hspot == "11dZ9ow9HZQj3GJEBdFXxkzVHbBfxKyJJ9P11LvkFvqgm1TYzke":
         #     print("p")
@@ -64,7 +65,6 @@ def score():
     unasserted = 0  # incremented for every unasserted hspot
 
     # add field to hspot in hspot_by_addr and fill with its hex addresses 12 to 4
-    # working 2/3/2021
     for hspot in h.hspot_by_addr:
         # try loop to skip all unasserted hspots
         # if hspot == "11dZ9ow9HZQj3GJEBdFXxkzVHbBfxKyJJ9P11LvkFvqgm1TYzke":
@@ -80,7 +80,6 @@ def score():
     del hspot, hex12_adr
 
     # add hex and field n to hex_dict, number of interactive hotspots in hex
-    # Working 2/3/2021
     for hspot in h.hspot_by_addr:
         if h.hspot_by_addr[hspot]["interactive"] == "yes":
             for hex in h.hspot_by_addr[hspot]["hex_addr"]:
@@ -91,9 +90,9 @@ def score():
                     continue
 
     # add neighbors & children to hex in hex_dict
-    # working 2/3/2021
     for hex in hex_dict:
         hex_dict[hex]["neighbors"] = dict.fromkeys(h3.k_ring_distances(hex, 1)[1], "no")
+        hex_dict[hex]["neighbors"][hex] = "no"  # Add for 11:19 test
         # neighbor at density_tgt? yes/no
         for neighbor in hex_dict[hex]["neighbors"]:
             try:
@@ -105,7 +104,6 @@ def score():
     del hex, neighbor
 
     # sum good neighbors
-    # working 2/3/2021
     for hex in hex_dict:
         temp_gd_neigh = 0
         for neighbor in hex_dict[hex]["neighbors"]:
@@ -119,10 +117,16 @@ def score():
     for hex in hex_dict:
         res = h3.h3_get_resolution(hex)
         if (res < 11):
-            # if hex == "882aac8883fffff":
-            #     print("pause here")
+            if hex == "892aac88817ffff":
+                print("pause here")
+                temp_dl = min(res_vars[res][2], res_vars[res][1] * max(hex_dict[hex]["good_neighbors"] + 1 - res_vars[res][0] + 1, 1))
+            # density_lmt is the min of density_max and density_tgt * multiplier
+            # multiplier is the max of
             hex_dict[hex]["dens_lmt"] = min(res_vars[res][2], res_vars[res][1] * max(
-                hex_dict[hex]["good_neighbors"] + 1 - res_vars[res][0] + 1, 1))
+                hex_dict[hex]["good_neighbors"] - res_vars[res][0] + 1, 1))
+            # OG test 11:19
+            # hex_dict[hex]["dens_lmt"] = min(res_vars[res][2], res_vars[res][1] * max(
+            #     hex_dict[hex]["good_neighbors"] + 1 - res_vars[res][0] + 1, 1))
     del hex, res
 
     # hex sorted by resolution
@@ -133,8 +137,6 @@ def score():
 
     # testing clipping calc for res 10
     for hex in temp_hex_dict[10]:
-        if hex == "892aac88817ffff":
-            print("pause")
         hex_dict[hex]["unclipped"] = min(hex_dict[hex]["dens_lmt"] / hex_dict[hex]["n"], 1)
         hex_dict[hex]["clipped"] = min(hex_dict[hex]["dens_lmt"], hex_dict[hex]['n'])
 
@@ -142,9 +144,10 @@ def score():
     # min(den limit/ sum clipped children, 1) = unclipped scaling
     for res in range(9, 3, -1):
         for hex in temp_hex_dict[res]:
-            if hex == "892aac88817ffff": #debug
+            if hex in testList: #debug
                 print("pause") #debug
             temp_sum = 0
+            res_view = h3.h3_get_resolution(hex)
             for child in hex_dict[hex]["children"]:
                 try:
                     temp_sum += hex_dict[child]["clipped"]
@@ -154,7 +157,10 @@ def score():
             if temp_sum == 0:
                 hex_dict[hex]["unclipped"] = 1
             else:
-                hex_dict[hex]["unclipped"] = min(hex_dict[hex]["dens_lmt"] / temp_sum, 1)
+                unclipped = min(hex_dict[hex]["dens_lmt"] / hex_dict[hex]["sum_clipped_children"], 1)
+                clipped = min(hex_dict[hex]["dens_lmt"], hex_dict[hex]["sum_clipped_children"])
+                hex_dict[hex]["unclipped"] = min(hex_dict[hex]["dens_lmt"] / hex_dict[hex]["sum_clipped_children"], 1)
+                hex_dict[hex]["clipped"] = min(hex_dict[hex]["dens_lmt"], hex_dict[hex]["sum_clipped_children"])
 
 
     #
@@ -189,6 +195,7 @@ def score():
             continue
         temp_list = numpy.prod(temp_scaling_list)
         temp_var = h.hspot_by_addr[hspot]["reward_scale"] #debug
+        h.hspot_by_addr[hspot]["scaling_by_hex"] = temp_scaling_list
         h.hspot_by_addr[hspot]["tx_rwd_scaling"] = temp_list
     #
     #
@@ -235,16 +242,22 @@ def score():
 
     # Checks calculated scaling vs API scaling
     # Make into fuction and send warning if this number is off when code is complete
+    code_tester = {}
     for hspot in h.hspot_by_addr:
         try:
-            if (h.hspot_by_addr[hspot]["reward_scale"] != h.hspot_by_addr[hspot]["tx_rwd_scaling"]):
+            API = h.hspot_by_addr[hspot]["reward_scale"]  # debug
+            my_score = h.hspot_by_addr[hspot]["tx_rwd_scaling"]  # debug
+            abs_diff = abs(API - my_score)
+            code_tester[hspot] = [abs_diff,my_score,API]
+
+            if abs_diff >= 0.1:
                 no_match += 1
-            API = h.hspot_by_addr[hspot]["reward_scale"] # debug
-            my_score = h.hspot_by_addr[hspot]["tx_rwd_scaling"] # debug
-            # if hspot == "11vB2aw3gWzoTPE6pN9LQmKGMBaVAkoq6AQ4jYHM1LEHpSCcSke": #debug
-            # print(f"{hspot} : {API} : {my_score}") #debug
-        except KeyError:
+                # print(f"{hspot} : {API} : {my_score}") #debug
+        except (TypeError, KeyError):
             unasserted_2 += 1
+    sorted_tuples = sorted(code_tester.items(), key=lambda item: item[1])
+    code_tester = {k: v for k, v in sorted_tuples}
+    print(code_tester)
     print(f"no match: {no_match}")
     print(f"Unasserted 2: {unasserted_2}")
 
