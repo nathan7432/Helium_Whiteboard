@@ -120,3 +120,17 @@ def text_on_map(m,text,coords):
 #     i += 1
 #     print(i)
 #     text_on_map(m,"test",item).save("index.html")
+
+def hex_parents(hex):
+    """
+
+    :param hex: child hex of interest
+    :return: list of parent hexes including original child hex
+    """
+    res = h3.h3_get_resolution(hex)
+    hex_list = [hex]
+    while res > 4:
+        hex_list.append(h3.h3_to_parent(hex))
+        hex = h3.h3_to_parent(hex)
+        res -= 1
+    return hex_list

@@ -5,7 +5,8 @@ from folium.features import DivIcon
 import folium
 testList = []
 
-h3_12 = h3.geo_to_h3(25.76004961592718, -80.19787993724776, 12)  # '8c2aac889cd6bff'
+
+h3_12 = h3.geo_to_h3(37.40689307158792, -122.2003927155468, 12)  # '8c2aac889cd6bff'
 testList.append(h3_12)
 h3_11 = h3.h3_to_parent(h3_12)  # '8b2aac889cd6fff'
 testList.append(h3_11)

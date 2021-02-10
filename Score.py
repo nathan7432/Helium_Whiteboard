@@ -39,7 +39,7 @@ def score():
         """
 
         :param hex: child hex of interest
-        :return: list of parent hexes including orignial child hex
+        :return: list of parent hexes including original child hex
         """
         res = h3.h3_get_resolution(hex)
         hex_list = [hex]

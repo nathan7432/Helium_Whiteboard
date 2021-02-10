@@ -16,6 +16,7 @@ class Hotspots:
             self.hspot_by_addr[h['address']] = h
             self.hspot_by_name[h['name'].lower()] = h
 
+
         temp_height = json.load(urllib.request.urlopen("https://api.helium.io/v1/blocks/height"))
         self.height = temp_height["data"]["height"]
 
