@@ -16,18 +16,18 @@ def paraDisplay(hotspot_address):
     print(f"res hex density_lmt sum_clipped_children")
     for hex in parents:
         res = h3.h3_get_resolution(hex)
-        dens_lmt = hex_dict[hex]["dens_lmt"]
+        dens_lmt = hex_dict[res][hex]["dens_lmt"]
         try:
-            sum_clipped_children = hex_dict[hex]["sum_clipped_children"]
+            sum_clipped_children = hex_dict[res][hex]["sum_clipped_children"]
         except KeyError:
             if res != 10: print(f"KeyError on res {res}")
-            sum_clipped_children = hex_dict[hex]['n']
+            sum_clipped_children = hex_dict[res][hex]['n']
         print(f"{res} {hex} {dens_lmt} {sum_clipped_children}")
 
     return
 
 def main():
-    paraDisplay("112pjFzU9WfnwvZp19KHWj6d4LoMHt4waCQg4NtKofCKmwvV1vao")
+    paraDisplay("11RC68j9rdv6jAtHWg76bkkekXB5GRgjoiXjRT9mxp9AoxaT9SJ")
     return
 
 main()

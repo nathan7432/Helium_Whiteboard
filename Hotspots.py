@@ -8,7 +8,10 @@ class Hotspots:
         Interface for easily finding hotspots
         :param force: Force reload hotspots
         """
-        self.hotspots = load_hotspots(force)
+        load_hotspots_list = load_hotspots(force)
+        # print(type(load_hotspots_list[1]))
+        print(type(load_hotspots_list[1]))
+        self.hotspots = load_hotspots_list[1]
 
         self.hspot_by_addr = dict()
         self.hspot_by_name = dict()  # note there are already name collisions use at your own risk
@@ -16,9 +19,8 @@ class Hotspots:
             self.hspot_by_addr[h['address']] = h
             self.hspot_by_name[h['name'].lower()] = h
 
-
-        temp_height = json.load(urllib.request.urlopen("https://api.helium.io/v1/blocks/height"))
-        self.height = temp_height["data"]["height"]
+        temp_last_cg = load_hotspots_list[0]
+        self.last_cg = temp_last_cg
 
         temp_interactive_var = json.load(urllib.request.urlopen("https://api.helium.io/v1/vars/hip17_interactivity_blocks"))
         self.interacitve_var = temp_interactive_var["data"]
