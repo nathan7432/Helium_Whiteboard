@@ -1,6 +1,5 @@
 from Score import score
 from Hotspots import Hotspots
-import h3
 from hex_map_functions import *
 
 hex_dict = score()

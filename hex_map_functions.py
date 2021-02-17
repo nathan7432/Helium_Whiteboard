@@ -1,10 +1,7 @@
 import h3
 import folium
 from folium.features import DivIcon
-from folium.plugins import FastMarkerCluster
-import random
 
-# directly from example notebook
 def visualize_hexagons(hexagons, color="red", folium_map=None):
     """
     hexagons is a list of hexcluster. Each hexcluster is a list of hexagons.
@@ -27,17 +24,9 @@ def visualize_hexagons(hexagons, color="red", folium_map=None):
     else:
         m = folium_map
     for polyline in polylines:
-        my_PolyLine = folium.PolyLine(locations=polyline, weight=8, color=color)
+        my_PolyLine = folium.PolyLine(locations=polyline, weight=1, color=color)
         m.add_child(my_PolyLine)
     return m
-
-# pass in user input and creates 1 resolutions of hexes
-# OG
-# def hex_map_res_x(resol, k_rings, map_center, color, m):  # pass in resolution, k_rings out, map_center, color
-#     h3_address = h3.geo_to_h3(map_center[0], map_center[1], resol)  # lat, lng, hex resolution
-#     for ring in range(k_rings, 1, -1):
-#         m = visualize_hexagons(list(h3.k_ring_distances(h3_address, k_rings)[ring-1]), color=color, folium_map=m)
-#     m.save("index.html")
 
 def hex_map_res_x(resol, map_center, m, list_h3_visualized = []):
     """
@@ -80,7 +69,6 @@ def hex_map_res_all(m, userHexRange, map_center):
             list_h3_visualized = output[0]
     return [list_h3_visualized, m]
 
-# puts 'text' on map 'm' at 'coords'
 def text_on_map(m,text,coords):
     """
 
@@ -100,26 +88,6 @@ def text_on_map(m,text,coords):
             )
         ).add_to(m)
     return m
-
-# text_on_map tester
-# m = folium.Map([40.085272742870025, -75.70014890016598])
-#
-# start = [40.085272742870025, -75.70014890016598]
-# list = [[40.085272742870025, -75.70014890016598]]
-# for i in range(0, 200):
-#     rand = random.randint(-1000,1000)
-#     rand = rand / (1000)
-#     rand2 = random.randint(-1000, 1000)
-#     rand2 = rand2 / (1000)
-#     temp = [start[0] + rand, start[1] + rand2]
-#     list.append(temp)
-# print(list)
-#
-# i = 0
-# for item in list:
-#     i += 1
-#     print(i)
-#     text_on_map(m,"test",item).save("index.html")
 
 def hex_parents(hex):
     """

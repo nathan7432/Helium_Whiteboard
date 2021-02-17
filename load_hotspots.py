@@ -4,7 +4,7 @@ import urllib.error
 import time
 
 def load_hotspots(force=False):
-    print("Running")
+    print("Running load_hotspots")
     try:
         if force:
             raise FileNotFoundError
@@ -20,13 +20,11 @@ def load_hotspots(force=False):
     # returns last cg and list of hotspots
     except (FileNotFoundError, json.JSONDecodeError) as e:
         # added by n8, finds last cg
-        print("n8 code running")
         current_height = json.load(urllib.request.urlopen("https://api.helium.io/v1/blocks/height"))
         current_height = current_height["data"]['height']
 
         consensus_loop = True
         while consensus_loop:
-            print(f"n8 code true loop ran {current_height}")
             retur = json.load(
                 urllib.request.urlopen(f"https://api.helium.io/v1/blocks/{current_height}/transactions"))
 
@@ -61,19 +59,8 @@ def load_hotspots(force=False):
                 hotspots=hotspots
             )
             json.dump(dat, fd, indent=2)  # what goes in the file, what file, indent
-            print("I got here")
 
         retur_list = []
         retur_list.append(last_cg)
         retur_list.append(hotspots)
-        print(type(retur_list))
-        print(type(retur_list[0]))
-        print(type(retur_list[1]))
-        # return hotspots
         return retur_list
-
-# def main():
-#     load_hotspots(True)
-#
-# main()
-

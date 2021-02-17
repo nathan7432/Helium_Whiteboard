@@ -1,16 +1,10 @@
 # shade hexes based on ratio of n to lmt density
 
-
-from Hotspots import Hotspots
-import h3
-import folium
 from folium.plugins import FastMarkerCluster
 import json
 import time
 from hex_map_functions import *
 from Score import score
-
-h = Hotspots()
 
 
 class Error(Exception):

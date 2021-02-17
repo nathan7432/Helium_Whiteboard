@@ -8,9 +8,8 @@ class Hotspots:
         Interface for easily finding hotspots
         :param force: Force reload hotspots
         """
-        load_hotspots_list = load_hotspots(force)
-        # print(type(load_hotspots_list[1]))
-        print(type(load_hotspots_list[1]))
+        print("Making hotspot object")
+        load_hotspots_list = load_hotspots()
         self.hotspots = load_hotspots_list[1]
 
         self.hspot_by_addr = dict()

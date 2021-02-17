@@ -19,20 +19,7 @@ from hex_map_functions import *
 
 h = Hotspots()
 
-hex_dict = {4:{}, 5:{}, 6:{}, 7:{}, 8:{}, 9:{}, 10:{}, 11:{}, 12:{}}
 
-# resolution : [N, density_tgt, density_max]
-res_vars = {
-    4: [1, 250, 800],
-    5: [1, 100, 400],
-    6: [1, 25, 100],
-    7: [2, 5, 20],
-    8: [2, 1, 4],
-    9: [2, 1, 2],
-    10: [2, 1, 1],
-}
-
-hex_addr_key = {4: 8, 5: 7, 6: 6, 7: 5, 8: 4, 9: 3, 10: 2, 11: 1, 12: 0}
 
 def hex_parents(hex):
     """
@@ -49,13 +36,27 @@ def hex_parents(hex):
     return hex_list
 
 def score():
+
+    hex_dict = {4: {}, 5: {}, 6: {}, 7: {}, 8: {}, 9: {}, 10: {}, 11: {}, 12: {}}
+
+    # resolution : [N, density_tgt, density_max]
+    res_vars = {
+        4: [1, 250, 800],
+        5: [1, 100, 400],
+        6: [1, 25, 100],
+        7: [2, 5, 20],
+        8: [2, 1, 4],
+        9: [2, 1, 2],
+        10: [2, 1, 1],
+    }
+
+    hex_addr_key = {4: 8, 5: 7, 6: 6, 7: 5, 8: 4, 9: 3, 10: 2, 11: 1, 12: 0}
+
     print("Running score")
     # add interactive field to hotspot
     interactive_counter_yes = 0
     interactive_counter_no = 0
     for hspot in h.hspot_by_addr:
-        # if hspot == "11dZ9ow9HZQj3GJEBdFXxkzVHbBfxKyJJ9P11LvkFvqgm1TYzke":
-        #     print("p")
         if type(h.hspot_by_addr[hspot]["last_poc_challenge"]) == type(None):
             h.hspot_by_addr[hspot]["interactive"] = "no"
             interactive_counter_no += 1
@@ -67,21 +68,14 @@ def score():
             interactive_counter_no += 1
     del hspot
 
-    unasserted = 0  # incremented for every unasserted hspot
-
     # add field to hspot in hspot_by_addr and fill with its hex addresses 12 to 4
     for hspot in h.hspot_by_addr:
         # try loop to skip all unasserted hspots
-        # if hspot == "11dZ9ow9HZQj3GJEBdFXxkzVHbBfxKyJJ9P11LvkFvqgm1TYzke":
-        #     print("p")
         try:
             hex12_adr = h3.geo_to_h3(h.hspot_by_addr[hspot]["lat"], h.hspot_by_addr[hspot]["lng"], 12)
             h.hspot_by_addr[hspot]["hex_addr"] = hex_parents(hex12_adr)
-            # temp = h.hspot_by_addr[hspot]["interactive"] #debug
-            # int_temp_ty = print(type(h.hspot_by_addr[hspot]["interactive"])) #debug
-            # int_temp_tp2 = type("yes") #debug
         except KeyError:
-            unasserted += 1
+            continue
     del hspot, hex12_adr
 
     # add hex and field n to hex_dict, number of interactive hotspots in hex
@@ -89,20 +83,16 @@ def score():
     for hspot in h.hspot_by_addr:
         if h.hspot_by_addr[hspot]["interactive"] == "yes":
             hex = h.hspot_by_addr[hspot]["hex_addr"][spot_in_list]
-            # if hex == "8a2836ae864ffff":
-                # print("pause")
             try:
                 hex_dict[10][hex]["sum_clipped_children"] += 1
             except KeyError:
                 hex_dict[10][hex] = {"sum_clipped_children": 1}
                 continue
 
-    temp = hex_dict[10]["8a2836ae864ffff"]["sum_clipped_children"]
-
     # add neighbors in hex_dict
     for hex in hex_dict[10]:
         hex_dict[10][hex]["neighbors"] = dict.fromkeys(h3.k_ring_distances(hex, 1)[1], "no")
-        hex_dict[10][hex]["neighbors"][hex] = "no"  # Add for 11:19 test
+        hex_dict[10][hex]["neighbors"][hex] = "no"
         # neighbor at density_tgt? yes/no
         for neighbor in hex_dict[10][hex]["neighbors"]:
             try:
@@ -124,28 +114,18 @@ def score():
     # calculate density limit
     for hex in hex_dict[10]:
         res = h3.h3_get_resolution(hex)
-        # if hex == "892aac88817ffff":
-        #     print("pause here")
-        # temp_dl = min(res_vars[res][2],
-        #                 res_vars[res][1] * max(hex_dict[hex]["good_neighbors"] + 1 - res_vars[res][0] + 1, 1))
-        # density_lmt is the min of density_max and density_tgt * multiplier
-        # multiplier is the max of
         hex_dict[10][hex]["dens_lmt"] = min(res_vars[res][2], res_vars[res][1] * max(
             hex_dict[10][hex]["good_neighbors"] - res_vars[res][0] + 1, 1))
-        # OG test 11:19
-        # hex_dict[hex]["dens_lmt"] = min(res_vars[res][2], res_vars[res][1] * max(
-        #     hex_dict[hex]["good_neighbors"] + 1 - res_vars[res][0] + 1, 1))
     del hex, res
 
-    # testing clipping calc for res 10
+    # add scaling factors and clipped values
     for hex in hex_dict[10]:
         hex_dict[10][hex]["clipped"] = min(hex_dict[10][hex]["dens_lmt"], hex_dict[10][hex]["sum_clipped_children"])
         hex_dict[10][hex]["unclipped"] = min(hex_dict[10][hex]["dens_lmt"] / hex_dict[10][hex]["sum_clipped_children"], 1)
 
 
 
-    ###################### res 10 done ###################################################3
-    count = 0
+    ###################### res 9 through 4 ###################################################
     for res in range(9, 3, -1):
 
         # add hexes to hex_dict
@@ -164,10 +144,7 @@ def score():
 
         # sum clipped children
         for hex in hex_dict[res]:
-            # if hex in testList: #debug
-                # print("pause") #debug
             temp_sum = 0
-            res_view = h3.h3_get_resolution(hex) #debug
             for child in hex_dict[res][hex]["children"]:
                 try:
                     temp_sum += hex_dict[res+1][child]["clipped"]
