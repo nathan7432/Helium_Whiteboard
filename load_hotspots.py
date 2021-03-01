@@ -20,6 +20,7 @@ def load_hotspots(force=False):
     # returns last cg and list of hotspots
     except (FileNotFoundError, json.JSONDecodeError) as e:
         # added by n8, finds last cg
+        print("Searching blockchain for last consensus group...")
         current_height = json.load(urllib.request.urlopen("https://api.helium.io/v1/blocks/height"))
         current_height = current_height["data"]['height']
 
@@ -30,7 +31,7 @@ def load_hotspots(force=False):
 
             for item in retur["data"]:
                 if item["type"] == "consensus_group_v1":
-                    print("touchdown")
+                    print("Last cg found!")
                     last_cg = current_height
                     consensus_loop = False
                     break

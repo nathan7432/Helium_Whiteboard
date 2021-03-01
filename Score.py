@@ -17,7 +17,7 @@ import numpy
 from hex_map_functions import *
 
 
-h = Hotspots()
+h = Hotspots(True)
 
 hex_dict = {4:{}, 5:{}, 6:{}, 7:{}, 8:{}, 9:{}, 10:{}, 11:{}, 12:{}}
 
@@ -369,13 +369,13 @@ def score():
     # print(f"{no_match_1+no_match_01+no_match_001+no_match_0001+match+unasserted_2} {len(h.hspot_by_addr)}")
     if no_match_1+no_match_01+no_match_001+no_match_0001+match+unasserted_2 != len(h.hspot_by_addr):
         print("Not all hotspots accounted for")
-    # print(f"no match 0.1: {no_match_1}")
-    # print(f"no match 0.01: {no_match_01}")
-    # print(f"no match 0.001: {no_match_001}")
-    # print(f"no match 0.0001: {no_match_0001}")
-    # print(f"Total no match: {no_match_1+no_match_01+no_match_001+no_match_0001}")
-    # print(f"Unasserted 2: {unasserted_2}")
     if no_match_1+no_match_01+no_match_001+no_match_0001 > 0:
         print(f"Total no match {no_match_1+no_match_01+no_match_001+no_match_0001}")
+        print(f"no match 0.1: {no_match_1}")
+        print(f"no match 0.01: {no_match_01}")
+        print(f"no match 0.001: {no_match_001}")
+        print(f"no match 0.0001: {no_match_0001}")
+        print(f"Total no match: {no_match_1+no_match_01+no_match_001+no_match_0001}")
+        print(f"Unasserted 2: {unasserted_2}")
 
     return hex_dict

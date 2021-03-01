@@ -7,3 +7,6 @@
 # assign name to hypothetical hotspot
 # add coords
 # interactive yes
+
+# click adds lat long
+# click adds lat long again

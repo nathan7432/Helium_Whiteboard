@@ -1,6 +1,8 @@
 import h3
 import folium
-from folium.features import DivIcon
+from folium.features import DivIcon, GeoJson
+import json
+from geojson.feature import *
 
 def visualize_hexagons(hexagons, color="red", folium_map=None):
     """
@@ -24,7 +26,7 @@ def visualize_hexagons(hexagons, color="red", folium_map=None):
     else:
         m = folium_map
     for polyline in polylines:
-        my_PolyLine = folium.PolyLine(locations=polyline, weight=1, color=color)
+        my_PolyLine = folium.PolyLine(locations=polyline, weight=1, color=color,)
         m.add_child(my_PolyLine)
     return m
 
@@ -102,3 +104,65 @@ def hex_parents(hex):
         hex = h3.h3_to_parent(hex)
         res -= 1
     return hex_list
+
+def visualize_hexagons_2(hexagons, hex_dict, folium_map=None):
+
+    # get the geometry of the hexagon and convert to geojson
+    for hex in hexagons:
+        try:
+            hex_dict[h3.h3_get_resolution(hex)][hex]["geometry"] = {"type": "Polygon",
+                      "coordinates": [h3.h3_to_geo_boundary(h=hex, geo_json=True)]
+                      }
+        except(KeyError):
+            # TODO: create error handling for this that finds dens_lmt of hex not in hex_dict
+            print("Hex not in hex_dict")
+            hex_dict[h3.h3_get_resolution(hex)][hex] = {
+                "geometry": {"type": "Polygon", "coordinates": [h3.h3_to_geo_boundary(h=hex, geo_json=True)]},
+                "sum_clipped_children": 1,
+                "dens_lmt": 2
+            }
+
+
+
+    # create map if none is passed in
+    if folium_map is None:
+        m = folium.Map(location=h3.h3_to_geo(hexagons[0]),
+                          zoom_start=13,
+                          tiles="cartodbpositron",
+                          attr='''© <a href="http://www.openstreetmap.org/copyright">
+                                  OpenStreetMap</a>contributors ©
+                                  <a href="http://cartodb.com/attributions#basemaps">
+                                  CartoDB</a>'''
+                          )
+
+    # create feature object for each hex to viz
+    list_features = []
+    for hex in hexagons:
+        res = h3.h3_get_resolution(hex)
+        feature = Feature(geometry=hex_dict[res][hex]["geometry"],
+                          addr=hex,
+                          sum_clipped_children=hex_dict[res][hex]["sum_clipped_children"],
+                          dens_lmt=hex_dict[res][hex]["dens_lmt"]
+                          )
+        list_features.append(feature)
+
+    feat_collection = FeatureCollection(list_features)
+    geojson_result = json.dumps(feat_collection)
+
+    GeoJson(
+        geojson_result,
+        style_function=lambda feature: {
+            'fillColor': None,
+            'color': ("red"
+                      if feature['sum_clipped_children'] > feature['dens_lmt']
+                      else ("yellow" if feature['sum_clipped_children'] == feature['dens_lmt'] else "black")
+                      ),
+            'weight': 2,
+            'fillOpacity': (0.05
+                            if feature['sum_clipped_children'] >= feature['dens_lmt']
+                            else 0)
+        },
+    ).add_to(m)
+
+    return m
+
